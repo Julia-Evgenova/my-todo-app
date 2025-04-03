@@ -1,5 +1,3 @@
-import './TodoList.css';
-
 import React, { useEffect, useState } from 'react';
 import {
   DragDropContext,
@@ -7,6 +5,7 @@ import {
   Draggable,
   DropResult
 } from '@hello-pangea/dnd';
+import './TodoList.css';
 
 type Todo = {
   id: string;
@@ -19,7 +18,21 @@ const LOCAL_STORAGE_KEY = 'my-todo-list';
 const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [input, setInput] = useState('');
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
 
+  // Тема
+  useEffect(() => {
+    document.body.className = theme === 'dark' ? 'dark' : '';
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  //  Загружаем данные
   useEffect(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (saved) {
@@ -37,7 +50,6 @@ const TodoList: React.FC = () => {
       }
     }
   }, []);
-  
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos));
@@ -62,13 +74,11 @@ const TodoList: React.FC = () => {
     setTodos(todos.map(todo => {
       if (todo.id === id) {
         const updated = { ...todo, completed: !todo.completed };
-        console.log('Флаг completed:', updated.completed);
         return updated;
       }
       return todo;
     }));
   };
-  
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -81,8 +91,12 @@ const TodoList: React.FC = () => {
 
   return (
     <div className="todo-container">
+      <button onClick={toggleTheme} style={{ marginBottom: '1rem' }}>
+        Переключить тему: {theme === 'dark' ? '🌙 Тёмная' : '☀️ Светлая'}
+      </button>
+
       <h2 className="todo-header">Мой список дел</h2>
-  
+
       <div className="todo-input-wrapper">
         <input
           type="text"
@@ -92,7 +106,7 @@ const TodoList: React.FC = () => {
         />
         <button onClick={handleAdd}>Добавить</button>
       </div>
-  
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="todo-list">
           {(provided) => (
@@ -124,7 +138,6 @@ const TodoList: React.FC = () => {
       </DragDropContext>
     </div>
   );
-  
 };
 
 export default TodoList;
